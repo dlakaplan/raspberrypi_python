@@ -5,12 +5,15 @@ import time
 import datetime
 import sqlite3
 
-sys.path.append('/home/pi/Adafruit-Raspberry-Pi-Python-Code/Adafruit_LEDBackpack')
-sys.path.append('/home/pi/python')
+sys.path.append('/home/pi/cloned/Adafruit-Raspberry-Pi-Python-Code/Adafruit_LEDBackpack')
+sys.path.append('/home/pi/raspberrypi')
+sys.path.append('/home/pi/raspberrypi_python')
 
 from Adafruit_7Segment import SevenSegment
 from Adafruit_LEDBackpack import LEDBackpack
 import sun_altitude
+import TSL2561b
+
 
 def get_last(conn):
   c=conn.cursor()
@@ -92,6 +95,15 @@ except:
 daybrightness=15
 nightbrightness=5
 
+minbrightness=1
+maxbrightness=15
+
+#tsl=TSL2561.TSL2561()
+
+
+LightSensor = TSL2561b.Adafruit_TSL2561()
+LightSensor.enableAutoGain(True)
+
 
 # Continually update the time on a 4 char, 7-segment display
 while(True):
@@ -114,9 +126,20 @@ while(True):
     alt,az=sun_altitude.sun_altitude()
   except:
     pass
-  if alt > 0:
-    led.setBrightness(daybrightness)
+  
+  if True:
+    lux=LightSensor.calculateLux()
+    # 90 lux is dim daylight
+    # 3000 lux is flashlight shining on sensor
+    brightness=int(lux/10)
+    brightness=min(brightness, maxbrightness)
+    brightness=max(brightness, minbrightness)
+    led.setBrightness(brightness)
+    #print lux,brightness
   else:
-    led.setBrightness(nightbrightness)
+    if alt > 0:
+      led.setBrightness(daybrightness)
+    else:
+      led.setBrightness(nightbrightness)
 
 #conn.close()

@@ -41,6 +41,9 @@ def check_route(APIkey, rt, stpid, rtdir, n=2):
         print 'Bustime return error:'
         print data
         return None
+    return data
+
+def parse_buses(data, rtdir, n=2):
     buses_printed=0
     for bus in data['bustime-response']['prd']:
         prdtm=datetime.datetime.strptime(bus['prdtm'],'%Y%m%d %H:%M')
@@ -54,26 +57,31 @@ def check_route(APIkey, rt, stpid, rtdir, n=2):
             bustype='M'
         else:
             bustype='D'
-        print 'Bus %s(%s) due at %s in %.1f min' % (rt,
+        print 'Bus %s(%s) due at %s in %.1f min' % (bus['rt'],
                                                     bustype,
                                                     bus['stpnm'],
                                                     timefromnow.seconds/60.0)
         buses_printed+=1
         if buses_printed==n:
             break
-    return data
+
     
-       
-
-usage="Usage: %prog [options]\n"
-parser = OptionParser(usage=usage)
-parser.add_option('-l','--location',dest='location',
-                  type='choice',
-                  choices=['home','office','work'],
-                  default='home',
-                  help='Stop location [default=%default]')
-
-(options, args) = parser.parse_args()
-data=check_route(APIkey, Stops[options.location]['rt'],
-                 Stops[options.location]['stpid'],
-                 Stops[options.location]['rtdir'])
+################################################################################       
+def main():
+    usage="Usage: %prog [options]\n"
+    parser = OptionParser(usage=usage)
+    parser.add_option('-l','--location',dest='location',
+                      type='choice',
+                      choices=['home','office','work'],
+                      default='home',
+                      help='Stop location [default=%default]')
+    
+    (options, args) = parser.parse_args()
+    data=check_route(APIkey, Stops[options.location]['rt'],
+                     Stops[options.location]['stpid'],
+                     Stops[options.location]['rtdir'])
+    parse_buses(data, Stops[options.location]['rtdir'])
+######################################################################
+# Running as executable
+if __name__=='__main__':
+    main()

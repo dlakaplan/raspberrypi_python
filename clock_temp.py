@@ -3,7 +3,23 @@
 import os,sys
 import time
 import datetime
-import sqlite3
+
+import xively
+import subprocess
+import requests
+
+# extract feed_id and api_key from environment variables
+try:
+  FEED_ID = os.environ["FEED_ID"]
+except:
+  FEED_ID =  480654980
+try:
+  API_KEY = os.environ["API_KEY"]
+except:
+  API_KEY=open('/home/pi/xively.api').read().strip()
+
+# initialize Xively api client
+api = xively.XivelyAPIClient(API_KEY)
 
 sys.path.append('/home/pi/cloned/Adafruit-Raspberry-Pi-Python-Code/Adafruit_LEDBackpack')
 sys.path.append('/home/pi/raspberrypi')
@@ -15,19 +31,13 @@ import sun_altitude
 import TSL2561b
 
 
-def get_last(conn):
-  c=conn.cursor()
-  c.execute('select * from archive order by dateTime desc')
-  result=c.fetchone()
-  return result
-
 def get_latest_file():
   f=open('/home/pi/.weewx_latest')
   line=f.readlines()[0]
   try:
     tlast=int(line.split()[0])
-    if tlast % 600 == 0:
-      print line
+    #if tlast % 600 == 0:
+    #  print line
   except:
     pass
   f.close()
@@ -76,6 +86,17 @@ def write_temp(temp, F=True):
   else:
     segment.writeDigitRaw(4, 0x39) #C
 
+# function to return a datastream object. This either creates a new datastream,
+# or returns an existing one
+def get_datastream(feed):
+  try:
+    datastream = feed.datastreams.get("external_temp")
+    return datastream
+  except:
+    datastream = feed.datastreams.create("external_temp", tags="temp_01")
+    return datastream
+ 
+
 
 # ===========================================================================
 # Clock Example
@@ -105,17 +126,30 @@ LightSensor = TSL2561b.Adafruit_TSL2561()
 LightSensor.enableAutoGain(True)
 
 
+# here is the Xively connection info
+feed = api.feeds.get(FEED_ID)
+datastream = get_datastream(feed)
+datastream.max_value = None
+datastream.min_value = None
+
 # Continually update the time on a 4 char, 7-segment display
 while(True):
   for i in xrange(interval):
     write_time()
     time.sleep(1)
-  #last=get_last(conn)
-  #temp=int(last[7])
   try:
     last=get_latest_file()
     temp=int(round(last))
     tempC=int(round((last-32)/1.8))
+
+    # send the info to Xively
+    datastream.current_value = last
+    datastream.at = datetime.datetime.utcnow()
+    try:
+      datastream.update()
+    except requests.HTTPError as e:
+      print "HTTPError({0}): {1}".format(e.errno, e.strerror)
+      
   except:
     pass
   write_temp(temp)

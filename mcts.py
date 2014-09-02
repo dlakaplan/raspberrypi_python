@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """
 Use the MCTS BusTime API
 to get realtime bus info
@@ -24,9 +25,11 @@ Stops={'home': {'rt': '30',
 
 Stops['work']=Stops['office']
 
-def check_route(APIkey, rt, stpid, rtdir, n=2):
+def check_route(APIkey, rt, stpid, rtdir, n=2, debug=False):
     url='http://realtime.ridemcts.com/bustime/api/v2/getpredictions'
     url+="?key=%s&rt=%s&stpid=%s&format=json" % (APIkey, rt, stpid)
+    if debug:
+        print 'Requesting %s' % url
     try:
         data=urllib.urlopen(url).readlines()
     except:
@@ -75,11 +78,15 @@ def main():
                       choices=['home','office','work'],
                       default='home',
                       help='Stop location [default=%default]')
+    parser.add_option('--debug',dest='debug',default=False,
+                      action='store_true',
+                      help='Provide debugging info?')
     
     (options, args) = parser.parse_args()
     data=check_route(APIkey, Stops[options.location]['rt'],
                      Stops[options.location]['stpid'],
-                     Stops[options.location]['rtdir'])
+                     Stops[options.location]['rtdir'],
+                     debug=options.debug)
     parse_buses(data, Stops[options.location]['rtdir'])
 ######################################################################
 # Running as executable

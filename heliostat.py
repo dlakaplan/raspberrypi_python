@@ -92,10 +92,14 @@ class heliostat():
       altwidth=putinrange(alt, sign=self.altsign)
       if self.debug:
         print 'alt=%.1f -> width=%.1f ms' % (alt, altwidth)        
-      self.setServoPulse(self.altchannel, altwidth)
+      #self.setServoPulse(self.altchannel, int(altwidth))
+      self.pwm.setPWM(self.altchannel, 0, int(altwidth))
 
-    def setaz(self, az):
-      azwidth=putinrange(az, sign=self.azsign)
+    def setaz(self, az, zero=90):
+      azwidth=putinrange(az-zero, sign=self.azsign)
       if self.debug:
         print 'az=%.1f -> width=%.1f ms' % (az, azwidth)        
-      self.setServoPulse(self.azchannel, azwidth)
+      #self.setServoPulse(self.azchannel, int(azwidth))
+      self.pwm.setPWM(self.azchannel, 0, int(azwidth))
+
+#h=heliostat(15, 13, debug=True)

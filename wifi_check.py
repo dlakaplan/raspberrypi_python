@@ -10,7 +10,7 @@ import subprocess
 WLAN_check_flg = False
 router_IP='10.0.1.1'
 
-def WLAN_check():
+def WLAN_check(WLAN_check_flg=False):
     '''
     This function checks if the WLAN is still up by pinging the router.
     If there is no return, we'll reset the WLAN connection.
@@ -40,4 +40,4 @@ def WLAN_check():
 
 
 
-WLAN_check()
+WLAN_check(WLAN_check_flg)

@@ -36,8 +36,8 @@ def get_latest_file():
   line=f.readlines()[0]
   try:
     tlast=int(line.split()[0])
-    #if tlast % 600 == 0:
-    #  print line
+    #if tlast % 60 == 0:
+    #print line
   except:
     pass
   f.close()
@@ -105,7 +105,6 @@ led=LEDBackpack(address=0x70)
 
 
 segment = SevenSegment(address=0x70)
-#conn=sqlite3.connect('/home/pi/weewx/archive/weewx.sdb')
 
 try:
   interval=int(sys.argv[1])
@@ -142,13 +141,14 @@ while(True):
     temp=int(round(last))
     tempC=int(round((last-32)/1.8))
 
-    # send the info to Xively
-    datastream.current_value = last
-    datastream.at = datetime.datetime.utcnow()
-    try:
-      datastream.update()
-    except requests.HTTPError as e:
-      print "HTTPError({0}): {1}".format(e.errno, e.strerror)
+    if False:
+      # send the info to Xively
+      datastream.current_value = last
+      datastream.at = datetime.datetime.utcnow()
+      try:
+        datastream.update()
+      except requests.HTTPError as e:
+        print "HTTPError({0}): {1}".format(e.errno, e.strerror)
       
   except:
     pass
@@ -176,4 +176,3 @@ while(True):
     else:
       led.setBrightness(nightbrightness)
 
-#conn.close()

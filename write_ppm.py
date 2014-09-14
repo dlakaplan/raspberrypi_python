@@ -1,8 +1,16 @@
 from PIL import Image,ImageFont,ImageDraw
+import os
 
 _height=16
 _width=32
-_font='/usr/local/texlive/2011/texmf-dist/fonts/truetype/public/gnu-freefont/FreeSans.ttf'
+_fonts=['/usr/local/texlive/2011/texmf-dist/fonts/truetype/public/gnu-freefont/FreeSans.ttf',
+        '/usr/share/fonts/truetype/freefont/FreeSans.ttf']
+for _font in _fonts:
+    if os.path.exists(_font):
+        break
+if not os.path.exists(_font):
+    print 'No font file found'
+    _font=None
 _fontsize=12
 
 class textppm():

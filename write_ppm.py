@@ -31,13 +31,24 @@ class textppm():
                                          self.fontsize)
         except:
             self.font=ImageFont.load_default()
+        if len(text)>0:
+            self.drawtext(text)
+        else:
+            self.text=None
+            self.im=None
+            self.drawtext=None
+            self.width=None
+            
 
+
+    def drawtext(self, text):
         self.text=text
         self.im = Image.new("RGB", (_width, _height))
         self.draw = ImageDraw.Draw(self.im)
         self.width=self.font.getsize(self.text)[0]
         self.im = Image.new("RGB", (self.width, _height))
         self.draw = ImageDraw.Draw(self.im)
+
         self.draw.text((0, 0),self.text,
                        self.color,
                        font=self.font)

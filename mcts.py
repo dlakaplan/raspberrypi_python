@@ -7,11 +7,16 @@ to get realtime bus info
 import os,sys,json,urllib
 from optparse import OptionParser
 import datetime
+import logging
+
+logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.WARNING)
+logger = logging.getLogger()
+
 
 APIkeyfile=os.path.join(os.environ['HOME'],
                         '.mcts')
 if not os.path.exists(APIkeyfile):
-    print 'Cannot find API key: %s' % APIkeyfile
+    logger.error('Cannot find API key: %s' % APIkeyfile)
     sys.exit(1)
 
 APIkey=open(APIkeyfile).readlines()[0].strip()
@@ -33,16 +38,16 @@ def check_route(APIkey, rt, stpid, rtdir, n=2, debug=False):
     try:
         data=urllib.urlopen(url).readlines()
     except:
-        print 'Unable to retrieve bus info'
+        logger.error('Unable to retrieve bus info')
         return None
     try:
         data=json.loads('\n'.join(data))
     except:
-        print 'Unable to interpret bus info'
+        logger.error('Unable to interpret bus info')
         return None
     if data['bustime-response'].has_key('error'):
-        print 'Bustime return error:'
-        print data
+        logger.error('Bustime return error:')
+        logger.error(data)
         return None
     return data
 

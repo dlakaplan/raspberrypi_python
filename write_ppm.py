@@ -57,5 +57,3 @@ class textppm():
         self.im.save(filename)
         
 
-t=textppm('Sample text ABC cats')
-t.write('out.png')

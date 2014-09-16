@@ -246,6 +246,10 @@ def main():
 
     l=localinfo()
     l.directory=options.directory
+
+    if options.read:
+        l.readfromfile()
+
     if options.update == 'bus':
         l.update_stops()
         self.businfo.writetofile()
@@ -256,8 +260,6 @@ def main():
         l.update()
         l.writetofile()
 
-    if options.read:
-        l.readfromfile()
 
     if options.write:
         l.writeimage(filename=options.image)

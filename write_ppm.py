@@ -17,6 +17,7 @@ class textppm():
 
     def __init__(self, text,
                  color=(255,255,255),
+                 grey=None,
                  font=_font,
                  fontsize=_fontsize,
                  height=_height,
@@ -25,6 +26,7 @@ class textppm():
             self.color=(color,color,color)
         else:
             self.color=color
+        self.grey=grey
         self.fontsize=_fontsize
         try:
             self.font=ImageFont.truetype(_font,
@@ -48,7 +50,8 @@ class textppm():
         self.width=self.font.getsize(self.text)[0]
         self.im = Image.new("RGB", (self.width, _height))
         self.draw = ImageDraw.Draw(self.im)
-
+        if self.grey is not None:
+            self.color=tuple([int(x*self.grey) for x in self.color])
         self.draw.text((0, 0),self.text,
                        self.color,
                        font=self.font)

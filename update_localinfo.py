@@ -246,18 +246,17 @@ def main():
     if options.verbose:
         logger.setLevel(logging.INFO)
 
-    l=localinfo()
-    l.directory=options.directory
+    l=localinfo(directory=options.directory)
 
     if options.read:
         l.readfromfile()
 
     if options.update == 'bus':
         l.update_stops()
-        self.businfo.writetofile()
+        l.businfo.writetofile()
     elif options.update == 'weather':
         l.update_weather()
-        self.weatherinfo.writetofile()            
+        l.weatherinfo.writetofile()            
     elif options.update == 'all':
         l.update()
         l.writetofile()

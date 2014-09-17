@@ -211,9 +211,9 @@ class localinfo():
         return '; '.join(sout)
     
         
-    def writeimage(self, filename='localinfo.ppm'):
-        sout=str(self)
-        t=write_ppm.textppm(sout)
+    def writeimage(self, filename='localinfo.ppm', grey=1):
+        sout=str(self) + '...          '
+        t=write_ppm.textppm(sout, grey=grey)
         t.write(os.path.join(self.directory, filename))
         logger.info('Local info written to %s' % os.path.join(self.directory, filename))
         
@@ -235,6 +235,8 @@ def main():
                       help='Write PPM image?')
     parser.add_option('-i','--image', dest='image', default='localinfo.ppm',
                       help='Output PPM image name [default=%default]')
+    parser.add_option('-g','--grey', dest='grey', default=1,type='float',
+                      help='Greyscale level for image (0->1) [default=%default]')
     parser.add_option('-v','--verbose', dest='verbose',default=False,
                       action='store_true',
                       help='Increase verbosity of output?')
@@ -262,7 +264,7 @@ def main():
 
 
     if options.write:
-        l.writeimage(filename=options.image)
+        l.writeimage(filename=options.image, grey=options.grey)
         
 
 ######################################################################

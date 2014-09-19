@@ -3,6 +3,7 @@
 import datetime, json, os, sys
 from optparse import OptionParser
 import logging
+import numpy
 
 import mcts
 import wunderground
@@ -24,6 +25,7 @@ Station='KWIMILWA39'
 logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.WARNING)
 logger = logging.getLogger()
 
+colormap=numpy.loadtxt(os.path.join(os.path.split(__file__)[0],'rgb_colormap.txt'))
 
 ##################################################
 class businfo():
@@ -212,9 +214,20 @@ class localinfo():
         return '; '.join(sout)
     
         
-    def writeimage(self, filename='localinfo.ppm', grey=1):
+    def writeimage(self, filename='localinfo.ppm', color=True, grey=1):
         sout=str(self) + '...          '
-        t=write_ppm.textppm(sout, grey=grey)
+        temperature=self.weatherinfo.weatherdata['current_observation']['temp_f']
+        if color:
+            index=int(temperature-(-20))
+            if index<0:
+                index=0
+            if index >= colormap.shape[0]:
+                index=colormap.shape[0]-1
+            index=colormap.shape[0]-1-index
+            rgb=colormap[index]
+        else:
+            rgb=(255,255,255)
+        t=write_ppm.textppm(sout, grey=grey, color=rgb)
         t.write(os.path.join(self.directory, filename))
         logger.info('Local info written to %s' % os.path.join(self.directory, filename))
         
@@ -236,6 +249,8 @@ def main():
                       help='Write PPM image?')
     parser.add_option('-i','--image', dest='image', default='localinfo.ppm',
                       help='Output PPM image name [default=%default]')
+    parser.add_option('--bw', dest='color', default=True,action='store_false',
+                      help='Should output image be monochrome?')
     parser.add_option('-g','--grey', dest='grey', default=1,type='float',
                       help='Greyscale level for image (0->1) [default=%default]')
     parser.add_option('-v','--verbose', dest='verbose',default=False,
@@ -264,7 +279,7 @@ def main():
 
 
     if options.write:
-        l.writeimage(filename=options.image, grey=options.grey)
+        l.writeimage(filename=options.image, grey=options.grey, color=options.color)
         
 
 ######################################################################

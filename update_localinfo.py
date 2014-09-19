@@ -58,6 +58,7 @@ class businfo():
             f=open(os.path.join(self.directory, self.filename), 'w')
         except:
             logger.error('Error opening %s for writing' % os.path.join(self.directory, self.filename))
+            return
         json.dump(self.busdata, f)
         f.close()
         logger.info('Bus info written to %s' % os.path.join(self.directory, self.filename))

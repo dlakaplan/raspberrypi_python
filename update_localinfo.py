@@ -88,6 +88,8 @@ class businfo():
             self.update()
         sout=[]
         sout.append(now.strftime('%a %Y-%m-%d %H:%M'))
+
+        routes={}
         for bus in self.busdata['bustime-response']['prd']:
             prdtm=datetime.datetime.strptime(bus['prdtm'],'%Y%m%d %H:%M')
             timefromnow=prdtm-now
@@ -99,10 +101,20 @@ class businfo():
             delay=bus['dly']
             if delay:
                 sym+='(D)'
-            sout.append('%s(%s) due in %d min%s' % (bus['rt'],
-                                                    bus['des'],
-                                                    round(timefromnow.seconds/60.0),
-                                                    sym))
+            key='%s(%s)' % (bus['rt'],bus['des'])
+            if key in routes.keys():
+                routes[key].append('%d min%s' % (round(timefromnow.seconds/60.0),
+                                                 sym))
+            else:
+                routes[key]=['%d min%s' % (round(timefromnow.seconds/60.0),
+                                           sym)]
+                
+                
+        for rt in routes.keys():
+            
+            sout.append('%s due in %s' % (rt,
+                                          ', '.join(routes[rt])))
+            
         return '; '.join(sout)
 ##################################################
 class weatherinfo():
@@ -276,7 +288,6 @@ def main():
     elif options.update == 'all':
         l.update()
         l.writetofile()
-
 
     if options.write:
         l.writeimage(filename=options.image, grey=options.grey, color=options.color)

@@ -70,13 +70,15 @@ def write_temp(temp, F=True):
   digit_2 = temp % 10
   temp = temp / 10
   digit_3 = temp % 10
-  if sign :
-    segment.writeDigitRaw(0, 0x40)       # - sign
-  if digit_3 > 0 :
+  if sign and (digit_2 > 0 or digit_3 > 0):
+      segment.writeDigitRaw(0, 0x40)       # - sign
+  elif digit_3 > 0 :
     segment.writeDigit(0, digit_3)       # Hundreds
   else:
     segment.writeDigitRaw(0, 0)
-  if digit_2 > 0 :
+  if sign and not (digit_2 > 0 or digit_3 > 0):
+      segment.writeDigitRaw(1, 0x40)       # - sign
+  elif digit_2 > 0 :
     segment.writeDigit(1, digit_2)       # Tens
   else:
     segment.writeDigitRaw(1, 0)

@@ -85,8 +85,12 @@ class Dynamicspectrum():
         read a new chunk from the input device
         """
         if not _useALSA:
-            audiodata = self.stream.read(self.CHUNK)
-            l=True
+            try:
+                audiodata = self.stream.read(self.CHUNK)
+                l=True
+            except IOError as e:
+                #print "I/O error({0}): {1}".format(e.errno, e.strerror)
+                l=False
         else:
             l,audiodata = self.stream.read()
         if l:

@@ -79,6 +79,8 @@ class Dynamicspectrum():
         # and the dynamic spectrum
         self.dynspec=numpy.ones((self.CHUNK/2-1, self.nreads))
         self.iread=-1
+        self.read_total=0
+        self.skipped_total=0
 
     def read(self):
         """
@@ -94,6 +96,7 @@ class Dynamicspectrum():
         else:
             l,audiodata = self.stream.read()
         if l>0:
+            self.read_total+=1
             # got some new data
             self.iread+=1
             if self.iread==self.nreads:
@@ -101,10 +104,11 @@ class Dynamicspectrum():
             self.data[(self.iread*self.CHUNK):((self.iread+1)*self.CHUNK),:]=numpy.fromstring(audiodata,dtype=self.dtype).reshape((self.CHUNK,2))
             # capture one channel for the dynamic spectrum
             self.latestdata[:]=numpy.fromstring(audiodata,dtype=self.dtype).reshape((self.CHUNK,2))[:,0]
-            
+            # compute the power spectrum
             self.dynspec[:,self.iread]=(numpy.abs(numpy.fft.fft(self.latestdata))**2)[:self.CHUNK/2-1]
             return True
         else:
+            self.skipped_total+=1
             return False
 
     def save(self):
@@ -189,12 +193,16 @@ while True:
         dsdisplay.render(screen)
                 
         pygame.display.flip()
+        pass
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             sys.exit(0)
         elif event.type == pygame.KEYDOWN:            
             if event.unicode=='q':
+                print 'Read %d / Skipped %d (%.1f%% good)' % (ds.read_total,
+                                                              ds.skipped_total,
+                                                              100*float(ds.read_total)/(ds.read_total+ds.skipped_total))
                 sys.exit(0)
             if event.unicode=='s':
                 ds.save()            

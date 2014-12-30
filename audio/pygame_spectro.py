@@ -1,5 +1,6 @@
 import numpy, matplotlib.cm as cm
 import sys,datetime
+from optparse import OptionParser
 import wave
 try:
     import alsaaudio as aa
@@ -34,7 +35,7 @@ class Dynamicspectrum():
             if self.bits==32:
                 self.FORMAT = pyaudio.paInt32
             elif self.bits==16:
-                self.FORMAT = pyaudio.paInt32
+                self.FORMAT = pyaudio.paInt16
             elif self.bits==8:
                 self.FORMAT = pyaudio.paInt8            
             self.stream = self.p.open(format=self.FORMAT,
@@ -55,9 +56,8 @@ class Dynamicspectrum():
             elif self.bits==16:
                 self.stream.setformat(aa.PCM_FORMAT_S16_LE)                
             elif self.bits==8:
-                self.stream.setformat(aa.PCM_FORMAT_S8_LE)                
+                self.stream.setformat(aa.PCM_FORMAT_S8)                
                 
-
         # this is the number of independent reads
         # i.e. lines
         self.nreads=int(self.RATE / self.CHUNK * self.RECORD_SECONDS)
@@ -93,7 +93,7 @@ class Dynamicspectrum():
                 l=False
         else:
             l,audiodata = self.stream.read()
-        if l:
+        if l>0:
             # got some new data
             self.iread+=1
             if self.iread==self.nreads:
@@ -123,8 +123,14 @@ class Dynamicspectrum():
 
 
 class DynamicspectrumDisplay():
-    def __init__(self, shape, frequencies):
-        self.greymax=16
+    def __init__(self, shape, frequencies, bits=32):
+        assert bits in [32,16,8]
+        if bits==32:
+            self.greymax=16
+        elif bits==16:
+            self.greymax=12
+        elif bits==8:
+            self.greymax=8
         self.font=pygame.font.Font(None, 12)
         self.cm=cm.jet
         self.rgbdata=numpy.zeros((shape[0], shape[1], 3),
@@ -155,10 +161,25 @@ class DynamicspectrumDisplay():
                                (x,height-text.get_height()-10)])
             
 pygame.init()
-ds=Dynamicspectrum()
+if _useALSA:
+    # don't know why this is, but it works on the pi
+    chunk=940
+else:
+    chunk=1024
+
+parser = OptionParser(usage='pygame_spectro: display a live dynamic spectrograph of microphone input using pygame')
+parser.add_option('-t','--time',dest="time",default=5,
+                  help="Recording interval for display (s) [default=%default]")
+parser.add_option('-b','--bits',dest="bits",default='32',
+                  type='choice',choices=['32','16','8'],
+                  help='Bits per sample [default=%default]')
+(options, args) = parser.parse_args()
+
+
+ds=Dynamicspectrum(chunk=chunk, bits=int(options.bits), time=options.time)
 size = width, height = ds.dynspec.shape
 screen = pygame.display.set_mode(size, 0, 32)
-dsdisplay=DynamicspectrumDisplay(size, ds.frequencies)
+dsdisplay=DynamicspectrumDisplay(size, ds.frequencies, bits=ds.bits)
 
 print("* recording")
 while True:
@@ -176,10 +197,13 @@ while True:
             if event.unicode=='q':
                 sys.exit(0)
             if event.unicode=='s':
-                ds.save()
-            elif event.unicode==u'\uf700':
+                ds.save()            
+            elif event.unicode==u'\uf700' or event.key==273:
+                # this should be up
+                # don't know why the unicode is different on pi and mac
                 dsdisplay.greymax+=1
-            elif event.unicode==u'\uf701':
+            elif event.unicode==u'\uf701' or event.key==274:
+                # this should be down
                 dsdisplay.greymax-=1
                 if dsdisplay.greymax<1:
                     dsdisplay.greymax=1

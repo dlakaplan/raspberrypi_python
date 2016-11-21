@@ -168,7 +168,7 @@ class weatherinfo():
         
 ##################################################
 class localinfo():    
-    def __init__(self, directory=None):
+    def __init__(self, directory=None, writebus=True):
         self.Stops=Stops
         self.Station=Station
         if directory is None:
@@ -179,7 +179,8 @@ class localinfo():
         self.weatherinfo=weatherinfo(station=self.Station)
         self.businfo.directory=self.directory
         self.weatherinfo.directory=self.directory
-        
+        self.writebus=writebus
+
     def update_stops(self):
         self.businfo.update()
         
@@ -221,7 +222,8 @@ class localinfo():
         
         sout.append(now.strftime('%a %Y-%m-%d %H:%M'))
         sout+=soutweather.split('; ')[1:]
-        sout+=soutbus.split('; ')[1:]
+        if self.writebus:
+            sout+=soutbus.split('; ')[1:]
 
         return '; '.join(sout)
     
@@ -261,6 +263,9 @@ def main():
                       help='Write PPM image?')
     parser.add_option('-i','--image', dest='image', default='localinfo.ppm',
                       help='Output PPM image name [default=%default]')
+    parser.add_option('--nobus', dest='nobus', default=False,
+                      action='store_true',
+                      help='Do not include bus in output?')
     parser.add_option('--bw', dest='color', default=True,action='store_false',
                       help='Should output image be monochrome?')
     parser.add_option('-g','--grey', dest='grey', default=1,type='float',
@@ -274,7 +279,7 @@ def main():
     if options.verbose:
         logger.setLevel(logging.INFO)
 
-    l=localinfo(directory=options.directory)
+    l=localinfo(directory=options.directory,writebus=not options.nobus)
 
     if options.read:
         l.readfromfile()

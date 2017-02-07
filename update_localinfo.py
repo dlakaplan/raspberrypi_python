@@ -20,7 +20,10 @@ Stops={'office': {'rt': '30',
                        'stpid': '1402',
                        'rtdir': 'SOUTH'}}
 
+# Innovative Weather Center (offline as off November 2016)
 Station='KWIMILWA39'
+# Milwaukee Water Tower
+Station='KWIMILWA98'
 
 logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.WARNING)
 logger = logging.getLogger()

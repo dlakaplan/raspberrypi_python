@@ -45,7 +45,7 @@ def putinrange(angle, sign=+1):
 
 class heliostat():
     
-    def __init__(self, azchannel, altchannel, azsign=1, altsign=1, debug=False):
+    def __init__(self, azchannel, altchannel, azsign=-1, altsign=-1, debug=False):
         
       # Initialise the PWM device using the default address        
       self.pwm = PWM(_pwmaddress, debug=True)
@@ -63,6 +63,16 @@ class heliostat():
       self.observer.elevation=188
       self.datetime=None
 
+
+    def __call__(self, inputdatetime=None):
+      """
+      computes the Sun alt and az for a given datetime (UTC)
+      and sets the heliostat
+      """
+      self.sunaltaz(inputdatetime=inputdatetime)
+      self.setalt(self.alt)
+      self.setaz(self.az)
+
     def sunaltaz(self, inputdatetime=None):
       """
       computes the Sun alt and az for a given datetime (UTC)
@@ -72,6 +82,8 @@ class heliostat():
       else:
         self.datetime=inputdatetime
       self.observer.date=self.datetime.strftime('%Y/%m/%d %H:%M:%S')
+      if self.debug:
+        print 'Computing for %s UT' % self.observer.date
       self.sun.compute(self.observer)
       self.alt=self.sun.alt*180/math.pi
       self.az=self.sun.az*180/math.pi
@@ -88,8 +100,8 @@ class heliostat():
       self.pwm.setPWM(channel, 0, pulse)
 
 
-    def setalt(self, alt):
-      altwidth=putinrange(alt, sign=self.altsign)
+    def setalt(self, alt, zero=-90):
+      altwidth=putinrange(alt-zero, sign=self.altsign)
       if self.debug:
         print 'alt=%.1f -> width=%.1f ms' % (alt, altwidth)        
       #self.setServoPulse(self.altchannel, int(altwidth))

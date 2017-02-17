@@ -4,22 +4,9 @@ import os,sys
 import time
 import datetime
 
-import xively
 import subprocess
 import requests
 
-# extract feed_id and api_key from environment variables
-try:
-  FEED_ID = os.environ["FEED_ID"]
-except:
-  FEED_ID =  480654980
-try:
-  API_KEY = os.environ["API_KEY"]
-except:
-  API_KEY=open('/home/pi/xively.api').read().strip()
-
-# initialize Xively api client
-api = xively.XivelyAPIClient(API_KEY)
 
 sys.path.append('/home/pi/cloned/Adafruit-Raspberry-Pi-Python-Code/Adafruit_LEDBackpack')
 sys.path.append('/home/pi/raspberrypi')
@@ -31,7 +18,10 @@ import sun_altitude
 import TSL2561b
 
 
-def get_latest_file():
+def get_latest_file(maxdelay=3600):
+  modtime=os.path.getmtime('/home/pi/.weewx_latest')
+  if time.time()-modtime>maxdelay:
+    return -99
   f=open('/home/pi/.weewx_latest')
   line=f.readlines()[0]
   try:
@@ -62,6 +52,14 @@ def write_temp(temp, F=True):
   """
   https://learn.adafruit.com/large-pi-based-thermometer-and-clock/software
   """
+  if temp < -90:
+    # it is a null value
+      segment.writeDigitRaw(0, 0x40)       # - sign
+      segment.writeDigitRaw(1, 0x40)       # - sign
+      segment.writeDigitRaw(2, 0x40)       # - sign
+      segment.writeDigitRaw(3, 0x40)       # - sign    
+      return
+
   segment.setColon(False)
   sign = (temp < 0)
   temp = abs(temp)
@@ -127,12 +125,6 @@ LightSensor = TSL2561b.Adafruit_TSL2561()
 LightSensor.enableAutoGain(True)
 
 
-# here is the Xively connection info
-feed = api.feeds.get(FEED_ID)
-datastream = get_datastream(feed)
-datastream.max_value = None
-datastream.min_value = None
-
 # Continually update the time on a 4 char, 7-segment display
 while(True):
   for i in xrange(interval):
@@ -141,17 +133,7 @@ while(True):
   try:
     last=get_latest_file()
     temp=int(round(last))
-    tempC=int(round((last-32)/1.8))
-
-    if False:
-      # send the info to Xively
-      datastream.current_value = last
-      datastream.at = datetime.datetime.utcnow()
-      try:
-        datastream.update()
-      except requests.HTTPError as e:
-        print "HTTPError({0}): {1}".format(e.errno, e.strerror)
-      
+    tempC=int(round((last-32)/1.8))      
   except:
     pass
   write_temp(temp)
